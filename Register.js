@@ -1,4 +1,4 @@
-
+import DatabaseM from "./Database.js"
 class Register{
 
 constructor(){

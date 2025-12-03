@@ -20,6 +20,6 @@ class Database{
 
 
 
-const Database = new Database()
+const DatabaseM = new Database()
 
-export default Database 
+export default DatabaseM

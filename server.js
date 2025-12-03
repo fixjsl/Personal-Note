@@ -36,6 +36,9 @@ app.post('/Login-data',(req,res)=>{
 })
 
 //Register
+app.post('/Id_depuli',(req,res)=>{
+    //id 중복 체크
+})
 app.post('/Register-data',(req,res)=>{
     try{
         //
@@ -49,15 +52,17 @@ app.post('/Register-data',(req,res)=>{
 //Write Text
 app.post('/Write-data',(req,res)=>{
     try{
-
+        //회원의 개인 포 ㄹ더에  json형태로 저장 
     }
     catch(err){
 
     }
 })
 //Read Text
+//json 형태의 파일을 html로 변환해서 출력
 //app.get()
 //글 목록 데이터
+//글 번호화 제목을 json형태로 반환
 //app.get()
 
 

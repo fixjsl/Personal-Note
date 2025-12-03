@@ -1,3 +1,5 @@
+import DatabaseM from "./Database.js"
+
 class Login{
     constructor(){
 
@@ -12,6 +14,7 @@ class Login{
 
         //check password
         //password가 틀리면 return false
+        //만약 관리자 아이디라면 관리자 페이지로
 
 
     }
