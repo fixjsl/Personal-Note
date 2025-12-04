@@ -60,10 +60,10 @@ app.post('/Write-data',(req,res)=>{
 })
 //Read Text
 //json 형태의 파일을 html로 변환해서 출력
-//app.get()
+app.get('/title/')
 //글 목록 데이터
 //글 번호화 제목을 json형태로 반환
-//app.get()
+app.get()
 
 
 app.use(express.static('public'))

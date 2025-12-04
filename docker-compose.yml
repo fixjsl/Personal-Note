@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # 1. MariaDB 데이터베이스 서비스
+  mariadb:
+    container_name: mariadb-polygon-defense
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      # DB 접속 정보
+      MYSQL_ROOT_PASSWORD: fixjsl75767@
+      MYSQL_USER: fixjsl
+      MYSQL_PASSWORD: fixjsl75767@
+      MYSQL_DATABASE: polygonDefense
+    volumes:
+      # ⬇️ 최상위 폴더 기준으로 'Database' 폴더를 상대 경로로 연결
+      - ./Database:/var/lib/mysql 
+

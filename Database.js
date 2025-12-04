@@ -7,14 +7,17 @@ class Database{
         this.Database = databse
     }
 
-    Select(atri,table,req = null){
-
+    async Select(atri,table,req){
+        const query = 'select ?? from ?? where ?? = ?'
+        const res = await this.Database.query(query,[atri,table,atri,req])
     }
-    Update(atri, table){
-
+    async Update(atri, table,update_data,data_id){
+        const query = 'update ?? set ??  = ? where uid = ?'
+        const res = await this.Database.query(query,[atri,table,update_data,data_id])
     }
-    Delete(atri,table){
-
+    async Delete(atri,table){
+        const query = 'delete from ?? where uid = ?'
+        const res = await this.Database.query(query,[table,atri])
     }
 }
 
