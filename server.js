@@ -10,6 +10,8 @@ import DatabaseM from './Database.js'
 const app = express()
 const Note = './UserNote'
 
+let LoadPost = 0;
+
 //DB연결
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -42,11 +44,14 @@ app.post('/Id_depuli',(req,res)=>{
 app.post('/Register-data',(req,res)=>{
     try{
         //
-        RegisterM.regeister(req.body.id,req.body.password,req.body.username,)
+        RegisterM.regeister(req.body.id,req.body.password,req.body.username,DatabaseM)
     }
     catch(err){
 
     }
+
+})
+app.post('/update/:uid',(req,res) =>{
 
 })
 //Write Text
@@ -60,10 +65,14 @@ app.post('/Write-data',(req,res)=>{
 })
 //Read Text
 //json 형태의 파일을 html로 변환해서 출력
-app.get('/title/')
+app.get('/:username/:Postid',(req,res) =>{
+    
+})
 //글 목록 데이터
 //글 번호화 제목을 json형태로 반환
-app.get()
+app.get('/:Username/',(req,res)=>{
+  //메모 50개씩
+})
 
 
 app.use(express.static('public'))

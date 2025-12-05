@@ -2,18 +2,17 @@ import DatabaseM from "./Database.js"
 class Register{
 
 constructor(){
-
+    this.idC = false
 }
 
 Check_id(id,database){
 //id 중복 검사
 //id DB검색
 if(database){
-    return true
+    this.idC = true
 }
-else{
-    return false
-}
+
+    return this.idC
 
 }
 
@@ -21,7 +20,7 @@ else{
 
 regeister(id,password,username,database){
 
-if(!this.Check_id(id,database)){
+if(this.idC){
     return "It's already exists"
 }
 //password 해쉬코드화 작업
