@@ -5,10 +5,12 @@ import path from 'path'
 import session from 'express-session'
 import bc, { compare } from 'bcrypt'
 import mul from 'multer'
-
+import { fileURLToPath } from 'url'
 import DatabaseM from './Database.js'
 import multer from 'multer'
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 //
 const app = express()
 const Note = '/UserPost'
@@ -42,6 +44,7 @@ async function passwordhash(password) {
 }
 async function comparepass(reqpassword,hashpassword) {
     const match = await bc.compare(reqpassword,hashpassword)
+    console.log(match)
     return match
 }
 //세션 설정
@@ -74,16 +77,18 @@ const Filup = mul({
 //login
 app.post('/Login-data',async (req,res)=>{
     const id = req.body.id
-    const password = req.body.password
+    const password = req.body.password.trim()
+    console.log(password)
     try{
-        const result = await DatabaseM.Select(tableatri,usertable,id)
-        
+        const result = await DatabaseM.Selectid(tableatri,usertable,id)
+        console.log(result[0])
         if(result[0].length===0){
             return res.status(404).send("아이디가 없거나 비밀번호가 틀립니다")
             
         }
         else{
-            
+            console.log(password)
+            console.log(result[0][0].password)
             if(!await comparepass(password,result[0][0].password)){
              return res.status(404).send("아이디가 없거나 비밀번호가 틀립니다")
              
@@ -91,7 +96,7 @@ app.post('/Login-data',async (req,res)=>{
         }
         const userdata = result[0][0]
         //데이터베이스 userLogin속성 바꾸기
-        DatabaseM.Update(true,usertable,"isLogged",id)
+        DatabaseM.Update("isLogged",usertable,true,id)
         req.session.isLog = true
         req.session.user = {
             uid : userdata.uid,
@@ -122,16 +127,17 @@ app.get('/Logout-requset', async (req,res)=>{
 app.get('/regist/Id_depuli', async (req,res)=>{
     //id 중복 체크
     const userid = req.query.id
-
+    console.log(userid)
     try{
-        const result = await DatabaseM.Select([tableatri[2]],usertable,tableatri[2],userid)
+        const result = await DatabaseM.Selectid("id",usertable,userid)
 
         const userdata = result[0]
-
-        if(userdata>0){
+        console.log(userdata)
+        if(userdata.length>0){
             return res.status(409).send("아이디가 중복됨")
         }
         else{
+            console.log("오ㅐ?")
             return res.status(200).send("아이디 사용가능")
         }
     }
@@ -143,10 +149,11 @@ app.get('/regist/Id_depuli', async (req,res)=>{
 app.post('/Register-data',async (req,res)=>{
     const username = req.body.username
     const id = req.body.id
+    
     const password = req.body.password
     try{
         //
-        const result = await DatabaseM.Select([tableatri[2]],usertable,tableatri[2],id)
+        const result = await DatabaseM.Selectid("id",usertable,id)
 
         const userdata = result[0]
 
@@ -154,11 +161,11 @@ app.post('/Register-data',async (req,res)=>{
             return res.status(409).send("아이디가 중복됨")
         }
         else{
-            const passwordhash = await hashpassword(password)
-            await DatabaseM.Insert(usertable,[username,id,passwordhash,defaultimg])
+            const passwordh = await passwordhash(password)
+            await DatabaseM.Insert(usertable,[username,id,passwordh,defaultimg])
             const pathd = path.join(Note,username)
             await fs.mkdir(pathd,{recursive:true})
-            res.send("로그인 성공")
+            console.log("회원가입 성공 성공")
             return res.redirect('/Login.html')
         }
 
@@ -256,7 +263,7 @@ app.post('/Write-data',async (req,res)=>{
 app.get('/post/:username/:Postid',(req,res)=>{
     const filep = path.join(__dirname,'public','Post.html')
 
-    res.sendFile(filep,{root : __dirname})
+    res.sendFile(filep)
 })
 app.get('/api/post/:username/:Postid',async (req,res) =>{
     const pathp = path.join(Note,req.params.username,`${req.params.Postid}.json`)
@@ -277,7 +284,7 @@ app.get('/api/post/:username/:Postid',async (req,res) =>{
 app.get('/post/:username',(req,res)=>{
     const filep = path.join(__dirname,'public','PostList.html')
 
-    res.sendFile(filep,{root : __dirname})
+    res.sendFile(filep)
 })
 app.get('/api/post/:username',async (req,res)=>{
   //메모 50개씩
@@ -320,12 +327,12 @@ app.get('/api/post/:username',async (req,res)=>{
 //이미지 불러오기
 app.get('/api/getimg',async (req,res)=>{
     try{
-        const result = await DatabaseM.Select(["img"],usertable,req.session.user.uid)
+        const result = await DatabaseM.Select("profile_img",usertable,req.session.user.uid)
         if(result[0].length === 0){
             return res.status(404).send("존재하지 않는 유저입니다")
         }
-        const imgp = path.join(__dirname,img,result[0][0].img)
-        res.sendFile(imgp,{root : __dirname})
+        const imgp = path.join(__dirname,result[0][0].profile_img)
+        res.sendFile(imgp)
     }catch(err){
         console.log(err)
         throw new Error(err);
@@ -348,12 +355,17 @@ app.post('/profile-img',Filup.single('img'),async (req,res)=>{
 app.get('/:username/userinfo',(req,res)=>{
     const filep = path.join(__dirname,'public','Userinfo.html')
 
-    res.sendFile(filep,{root : __dirname})
+    res.sendFile(filep)
 })
 app.get('/', (req,res) =>{
     try{
         if(req.session && req.session.isLog){
+            if(req.session.user.role ==='root'){
+                res.redirect(`/RootPage.html`)
+            }
+            else{
             res.redirect(`/post/${req.session.user.username}`)
+            }
         }
         else{
             res.redirect('/Login.html')

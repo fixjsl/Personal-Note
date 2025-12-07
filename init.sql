@@ -7,9 +7,10 @@ Create TABLE IF NOT EXISTS User(
     profile_img varchar(255) Default 'default.png',
     role varchar(20) default 'user',
 
-    created_at timestamp default current_timestamp
-);
+    created_at timestamp default current_timestamp,
+    isLogged Boolean not null default 0
+)
 
 insert into User (id,username,password,role)
-value ('dkd462','fixjsl','$2y$10$et6gkKwBTviPaTlHJZQUc.9p/7zzDJrq3AH/uh949rC9til7PZtzS','root');
+value ('dkd462','fixjsl','$2b$10$w41rhdWVZW90RTIfUwh.q.SUbK4XtHe2ACztXXThklAPenfwfqH/6','root');
 

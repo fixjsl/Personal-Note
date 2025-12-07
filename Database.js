@@ -6,12 +6,19 @@ class Database{
     SetDatabase(databse){
         this.Database = databse
 
-        this.user_col = ['username','id','password','img']
+        this.user_col = ['username','id','password','profile_img']
     }
 
     async Select(atri,table,req){
         const query = 'select ?? from ?? where uid = ?'
         const res = await this.Database.promise().query(query,[atri,table,req])
+
+        return res
+    }
+    async Selectid(atri,table,req){
+        const query = 'select ?? from ?? where id = ?'
+        const res = await this.Database.promise().query(query,[atri,table,req])
+
         return res
     }
     async Insert(table,value){
