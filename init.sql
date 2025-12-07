@@ -9,7 +9,7 @@ Create TABLE IF NOT EXISTS User(
 
     created_at timestamp default current_timestamp,
     isLogged Boolean not null default 0
-)
+);
 
 insert into User (id,username,password,role)
 value ('dkd462','fixjsl','$2b$10$w41rhdWVZW90RTIfUwh.q.SUbK4XtHe2ACztXXThklAPenfwfqH/6','root');

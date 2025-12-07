@@ -1,3 +1,4 @@
+drop TABLE User;
 
 Create TABLE IF NOT EXISTS User(
     uid INT UNSIGNED NOT null auto_increment primary key,
@@ -9,7 +10,8 @@ Create TABLE IF NOT EXISTS User(
     role varchar(20) default 'user',
 
     created_at timestamp default current_timestamp,
-    isLogged Boolean not null default 0
+    isLogged Boolean not null default 0,
+    PostN int not null default 0
 )
 
 

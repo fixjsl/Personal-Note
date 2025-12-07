@@ -21,6 +21,12 @@ class Database{
 
         return res
     }
+    async Select(atri,table){
+        const query = 'select ?? from ?? '
+        const res = await this.Database.promise().query(query,[atri,table])
+
+        return res
+    }
     async Insert(table,value){
         const ph = value.map(()=> '?').join(', ')
 

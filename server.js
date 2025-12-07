@@ -8,13 +8,14 @@ import mul from 'multer'
 import { fileURLToPath } from 'url'
 import DatabaseM from './Database.js'
 import multer from 'multer'
+import { table } from 'console'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 //
 const app = express()
-const Note = '/UserPost'
-const img = '/UserProfile'
+const Note = 'UserPost'
+const img = 'UserProfile'
 const defaultimg = path.join(img,'default.png')
 //
 const usertable = "user"
@@ -113,7 +114,7 @@ app.post('/Login-data',async (req,res)=>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 app.get('/Logout-requset', async (req,res)=>{
@@ -143,7 +144,7 @@ app.get('/regist/Id_depuli', async (req,res)=>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 app.post('/Register-data',async (req,res)=>{
@@ -173,7 +174,7 @@ app.post('/Register-data',async (req,res)=>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 
 })
@@ -186,7 +187,7 @@ app.post('/update-username',async (req,res)=>{
         return res.status(200).send("닉네임 변경 성공")
     } catch (error) {
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 app.post('/update-password',async (req,res) =>{
@@ -212,7 +213,7 @@ app.post('/update-password',async (req,res) =>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 app.post('/delete-user',async (req,res)=>{
@@ -228,17 +229,17 @@ app.post('/delete-user',async (req,res)=>{
         
     } catch (err) {
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 //Write Text
-app.post('/Write-data',async (req,res)=>{
+app.post('/posts/:username/Write-data',async (req,res)=>{
     const uid = req.session.user.uid
     const title = req.body.title
     const text = req.body.text
   
     try{
-        const result = await DatabaseM.Select(["PostNumber"],usertable,uid)
+        const result = await DatabaseM.Select("PostN",usertable,uid)
         const postN = result[0][0].PostNumber
         const pathJ = path.join(Note,req.session.user.username,`${postN}.json`)
         //회원의 개인 포 ㄹ더에  json형태로 저장 
@@ -255,12 +256,12 @@ app.post('/Write-data',async (req,res)=>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 //Read Text
 //json 형태의 파일을 html로 변환해서 출력
-app.get('/post/:username/:Postid',(req,res)=>{
+app.get('/post/post/:username/:Postid',(req,res)=>{
     const filep = path.join(__dirname,'public','Post.html')
 
     res.sendFile(filep)
@@ -276,7 +277,7 @@ app.get('/api/post/:username/:Postid',async (req,res) =>{
         })
     } catch (err) {
                 console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 //글 목록 데이터
@@ -315,13 +316,13 @@ app.get('/api/post/:username',async (req,res)=>{
 
     })
     const fianllist = await Promise.all(postlist)
-    return res.json({
+    return res.status(200).json({
         postlist : fianllist
     })
 
   } catch (err) {
         console.log(err)
-        throw new Error(err);
+        return res.status(500).send(err)
   }
 })
 //이미지 불러오기
@@ -331,11 +332,11 @@ app.get('/api/getimg',async (req,res)=>{
         if(result[0].length === 0){
             return res.status(404).send("존재하지 않는 유저입니다")
         }
-        const imgp = path.join(__dirname,result[0][0].profile_img)
+        const imgp = path.join(__dirname,"UserProfile",result[0][0].profile_img)
         res.sendFile(imgp)
     }catch(err){
         console.log(err)
-        throw new Error(err);
+        return res.status(500).send(err)
     }
 })
 //프로필 이미지 받기
@@ -344,17 +345,22 @@ app.post('/profile-img',Filup.single('img'),async (req,res)=>{
     const filename = req.file.fieldname
 
     try {
-        await DatabaseM.Update("img",usertable,filename,uid)
+        await DatabaseM.Update("profile_img",usertable,filename,uid)
         res.redirect(`/userinfo/${req.session.user.username}`)
     } catch (error) {
                 console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
     }
 })
 //유저 인포 불러오기
 app.get('/:username/userinfo',(req,res)=>{
     const filep = path.join(__dirname,'public','Userinfo.html')
 
+    res.sendFile(filep)
+})
+app.get('/posts/:username/WriteText.html',(req,res)=>{
+    const filep = path.join(__dirname,'public','WriteText.html')
+    console.log(filep)
     res.sendFile(filep)
 })
 app.get('/', (req,res) =>{
@@ -373,7 +379,22 @@ app.get('/', (req,res) =>{
     }
     catch(err){
         console.log(err)
-        throw new Error(err);
+                return res.status(500).send(err)
+    }
+})
+app.get('/RootPage.html',async (req,res)=>{
+    try {
+        const result = await DatabaseM.Select('*',table)
+
+        const userdata = result[0]
+
+        return res.json({
+            userdata : userdata
+        })
+
+    } catch (err) {
+                console.log(err)
+                return res.status(500).send(err)
     }
 })
 app.use(express.static('public'))
