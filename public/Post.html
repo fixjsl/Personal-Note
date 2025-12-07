@@ -3,14 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="Post.css">
+    <script src="/js/publicheder.js"></script>
     <title>Personal Note</title>
 </head>
 <body>
     <header>
+        <h1 id = "username" class = "title"></h1>
+        <div class = "bimgH">
+            <img class="imgH" src="/api/getimg">
+            <button id = "logout" class="controlbutton">로그아웃</button>
+            <button id = "userinfo"class ="controlbutton">유저 정보</button>
+        </div>
 
     </header>
-    이게 왜나옴?
+    <main id = "post">
 
-    <script src="js/PostLoding.js"></script>
+    </main>
+
+    <script src="/js/PostLoding.js"></script>
 </body>
 </html>

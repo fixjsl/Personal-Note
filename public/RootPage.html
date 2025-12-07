@@ -3,9 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/Rootpage.js"></script>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 30px auto; }
+        th, td { border: 1px solid #aaa; padding: 7px 12px; text-align: center; }
+        th { background: #f3f5fa; }
+    </style>
     <title>Personal Note</title>
 </head>
 <body>
-    
+    <table id="userTable">
+    <thead>
+        <tr>
+            <th>UID</th>
+            <th>닉네임</th>
+            <th>현재까지 쓴 글</th>
+            <th>로그인 상태</th>
+        </tr>
+    </thead>
+    <tbody id="userTableBody">
+    </tbody>
+</table>
 </body>
 </html>

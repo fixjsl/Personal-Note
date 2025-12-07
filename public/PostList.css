@@ -1,4 +1,4 @@
-.main-header {
+header {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
@@ -9,7 +9,7 @@
 }
 
 
-.header-title {
+.title {
 
     margin: 0 auto 0 auto; 
     
@@ -30,7 +30,7 @@
     min-width: 0; 
 }
 
-.header-controls button {
+.controlbutton {
     margin-left: 10px;
     padding: 8px 15px;
     border: none;

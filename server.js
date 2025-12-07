@@ -107,7 +107,7 @@ app.post('/Login-data',async (req,res)=>{
             role : userdata.role
         }
         if(userdata.role === 'root'){
-            return res.redirect('/RootPage.html')
+            return res.redirect('/RootPage')
         }
         else{
                     return res.redirect(`/post/${userdata.username}`)
@@ -185,11 +185,14 @@ app.post('/Register-data',async (req,res)=>{
 })
 app.post('/update-username',async (req,res)=>{
     const uid = req.session.user.uid
-
+    const prevusername = req.session.user.username
     const changeusername = req.body.username
+    const oldpath = path.join(Note,prevusername)
+    const newpath = path.join(Note,changeusername)
     try {
         const conn = await DatabaseM.Database.getConnection();
         await DatabaseM.Update(conn,'username',usertable,changeusername,uid)
+        await fs.rename(oldpath,newpath)
         req.session.user.username = changeusername
         return res.redirect(`/${changeusername}/userinfo`)
     } catch (error) {
@@ -214,7 +217,7 @@ app.post('/update-password',async (req,res) =>{
         if(await comparepass(curpassword,userpass)){
             const hashnew = await passwordhash(newpassword)
             await DatabaseM.Update(conn,'password',usertable,hashnew,uid)
-            return res.status(200).send("비밀번호 변경 성공")
+            return res.redirect(`/${req.session.user.username}/userinfo`)
         }
         else{
             return res.status(409).send("현재 비밀번호가 틀립니다")
@@ -384,7 +387,7 @@ app.get('/', (req,res) =>{
     try{
         if(req.session && req.session.isLog){
             if(req.session.user.role ==='root'){
-                res.redirect(`/RootPage.html`)
+                res.redirect(`/RootPage`)
             }
             else{
             res.redirect(`/post/${req.session.user.username}`)
@@ -399,7 +402,12 @@ app.get('/', (req,res) =>{
                 return res.status(500).send(err)
     }
 })
-app.get('/RootPage.html',async (req,res)=>{
+app.get('/RootPage',(req,res)=>{
+    const filep = path.join(__dirname,'public','RootPage.html')
+    console.log(filep)
+    res.sendFile(filep)
+})
+app.get('/api/RootPage/usertable',async (req,res)=>{
     try {
         const conn = await DatabaseM.Database.getConnection()
         const result = await DatabaseM.Selectt(conn,["uid","username","PostN","isLogged"],usertable)
