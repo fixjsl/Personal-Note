@@ -7,6 +7,18 @@
     <title>Personal Note</title>
 </head>
 <body>
-    
+    <main>
+        <h1 class = 'title'>Personal Note</h1>
+        <form method="post" id="Loginform" action="/Login-data" autocomplete="on" enctype="application/x-www-form-urlencoded">
+            <h1 class="etc">ID</h1>
+            <input type="text" name="id"><br>
+            <h1 class="etc">PASSWORD</h1> 
+            <input type="password" name = "password"><br><br>
+            <input type = "submit" name = "submit" value="로그인">
+            <button type="button" onclick="window.location.href = '/Register.html'">
+            회원가입
+            </button>
+        </form>
+    </main>
 </body>
 </html>
