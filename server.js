@@ -4,13 +4,16 @@ import fs from 'fs/promises'
 import path from 'path'
 import session from 'express-session'
 import bc, { compare } from 'bcrypt'
-
+import mul from 'multer'
 
 import DatabaseM from './Database.js'
+import multer from 'multer'
 
 //
 const app = express()
-const Note = './UserPost'
+const Note = '/UserPost'
+const img = '/UserProfile'
+const defaultimg = path.join(img,'default.png')
 //
 const usertable = "user"
 const tableatri = ["uid","username","id","password","role"]
@@ -53,6 +56,21 @@ app.use(session({
 }))
 app.use(express.urlencoded({extended:true}))
 app.use(express.json())
+
+const dir = mul.diskStorage({
+    destination : function(req,file,cb){
+        cb(null,path.join(__dirname,img))
+    },
+    filename:function(req,file,cb){
+        const uid = req.session.user.uid
+        const png = path.extname(file.originalname)
+        cb(null,uid+png)
+    }
+})
+const Filup = mul({
+    storage : dir,
+    limits : {fileSize: 10* 1024*1024}
+})
 //login
 app.post('/Login-data',async (req,res)=>{
     const id = req.body.id
@@ -106,7 +124,7 @@ app.get('/regist/Id_depuli', async (req,res)=>{
     const userid = req.query.id
 
     try{
-        const result = await DatabaseM.Select(tableatri[2],usertable,tableatri[2],userid)
+        const result = await DatabaseM.Select([tableatri[2]],usertable,tableatri[2],userid)
 
         const userdata = result[0]
 
@@ -128,7 +146,7 @@ app.post('/Register-data',async (req,res)=>{
     const password = req.body.password
     try{
         //
-        const result = await DatabaseM.Select(tableatri[2],usertable,tableatri[2],id)
+        const result = await DatabaseM.Select([tableatri[2]],usertable,tableatri[2],id)
 
         const userdata = result[0]
 
@@ -137,7 +155,7 @@ app.post('/Register-data',async (req,res)=>{
         }
         else{
             const passwordhash = await hashpassword(password)
-            await DatabaseM.Insert(usertable,[username,id,passwordhash,new Date()])
+            await DatabaseM.Insert(usertable,[username,id,passwordhash,defaultimg])
             const pathd = path.join(Note,username)
             await fs.mkdir(pathd,{recursive:true})
             res.send("로그인 성공")
@@ -213,7 +231,7 @@ app.post('/Write-data',async (req,res)=>{
     const text = req.body.text
   
     try{
-        const result = await DatabaseM.Select("PostNumber",usertable,uid)
+        const result = await DatabaseM.Select(["PostNumber"],usertable,uid)
         const postN = result[0][0].PostNumber
         const pathJ = path.join(Note,req.session.user.username,`${postN}.json`)
         //회원의 개인 포 ㄹ더에  json형태로 저장 
@@ -238,7 +256,7 @@ app.post('/Write-data',async (req,res)=>{
 app.get('/post/:username/:Postid',(req,res)=>{
     const filep = path.join(__dirname,'public','Post.html')
 
-    res.sendFile(filep)
+    res.sendFile(filep,{root : __dirname})
 })
 app.get('/api/post/:username/:Postid',async (req,res) =>{
     const pathp = path.join(Note,req.params.username,`${req.params.Postid}.json`)
@@ -259,7 +277,7 @@ app.get('/api/post/:username/:Postid',async (req,res) =>{
 app.get('/post/:username',(req,res)=>{
     const filep = path.join(__dirname,'public','PostList.html')
 
-    res.sendFile(filep)
+    res.sendFile(filep,{root : __dirname})
 })
 app.get('/api/post/:username',async (req,res)=>{
   //메모 50개씩
@@ -299,7 +317,39 @@ app.get('/api/post/:username',async (req,res)=>{
         throw new Error(err);
   }
 })
+//이미지 불러오기
+app.get('/api/getimg',async (req,res)=>{
+    try{
+        const result = await DatabaseM.Select(["img"],usertable,req.session.user.uid)
+        if(result[0].length === 0){
+            return res.status(404).send("존재하지 않는 유저입니다")
+        }
+        const imgp = path.join(__dirname,img,result[0][0].img)
+        res.sendFile(imgp,{root : __dirname})
+    }catch(err){
+        console.log(err)
+        throw new Error(err);
+    }
+})
+//프로필 이미지 받기
+app.post('/profile-img',Filup.single('img'),async (req,res)=>{
+    const uid = req.session.user.uid
+    const filename = req.file.fieldname
 
+    try {
+        await DatabaseM.Update("img",usertable,filename,uid)
+        res.redirect(`/userinfo/${req.session.user.username}`)
+    } catch (error) {
+                console.log(err)
+        throw new Error(err);
+    }
+})
+//유저 인포 불러오기
+app.get('/:username/userinfo',(req,res)=>{
+    const filep = path.join(__dirname,'public','Userinfo.html')
+
+    res.sendFile(filep,{root : __dirname})
+})
 app.get('/', (req,res) =>{
     try{
         if(req.session && req.session.isLog){

@@ -6,6 +6,43 @@
     <title>Personal Note</title>
 </head>
 <body>
-    
+    <img src="/api/getimg"><br>
+    <h1>닉네임 : </h1>
+    <h1 id = username></h1>
+
+
+    <form action="/update-username" method="post">
+        <fieldset>
+
+            <legend>닉네임 변경</legend>
+        새로운 닉네임<br>
+        <input type="text" name = "username"><br>
+        <input type="submit" value="변경하기">
+        </fieldset>ㅓ
+    </form>
+    <form action="/update-password" method="post">
+        <legend>비밀번호 변경</legend>
+        <fieldset>
+        현재 비밀번호<br>
+        <input type="password" name = "curpassword"><br><br>
+        새로운 비밀번호<br>
+        <input type="password" name = "newpassword"><br><br>
+        비밀번호 확인<br>
+        <input type="password" name = "ckpassword">
+        <input type="submit" value="변경하기">   
+        </fieldset>
+
+    </form>
+    <form action="/delete-user" method="post">
+        <input type="submit" value="회원 탈퇴">
+    </form>
+
+    <script>
+        const username = document.getElementById('username')
+        const urlusername = window.location.pathname.split('/')[1] 
+        document.addEventListener('DOMContentLoaded',()=>{
+            username.textContent = urlusername
+        })
+    </script>
 </body>
 </html>

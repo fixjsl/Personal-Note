@@ -13,12 +13,46 @@
             <h1 class="etc">Username</h1>
             <input type="text" name="username"><br>
             <h1 class="etc">ID</h1>
-            <input type="text" name="id"> <button type="button" id = > 중복 확인 버튼</button>
+            <input type="text" name="id" id = "id"> <button type="button" id = "idd"> 중복 확인 버튼</button><p id = "ckres"></p>
             <h1 class="etc">PASSWORD</h1> 
             <input type="password" name = "password"><br><br>
-            <input type="submit" value="회원가입">
+            <input type="submit" id = "submit" value="회원가입">
         </form>
 
     </main>
+    <script>
+        const idb = document.getElementById('idd')
+        const id = document.getElementById('id')
+        const ck = document.getElementById('ckres')
+        const submit = document.getElementById('submit')
+        let ckid = false
+        idb.addEventListener('click',async ()=>{
+            const userid = id.value.trim()
+
+            const res = await fetch(`/regist/Id_depuli?id=${encodeURIComponent(userid)}`)
+
+            if(res.status === 200){
+                idb.style.display = 'none'
+                ck.textContent =  await res.text()
+                ckid = true
+            }
+            else if(res.status === 409){
+                alert( await res.text())
+            }
+
+
+        })
+        id.addEventListener('input',()=>{
+            ckid = false
+            idb.style.display= 'inline-block'
+            ck.textContent = ''
+        })
+        submit.addEventListener('click',(e)=>{
+            if(!ckid){
+                e.preventDefault()
+                alert("id 중복 확인이 안되어있습니다")
+            }
+        })
+    </script>
 </body>
 </html>
