@@ -18,7 +18,7 @@
         새로운 닉네임<br>
         <input type="text" name = "username"><br>
         <input type="submit" value="변경하기">
-        </fieldset>ㅓ
+        </fieldset>
     </form>
     <form action="/update-password" method="post">
         <legend>비밀번호 변경</legend>
@@ -39,7 +39,7 @@
 
     <script>
         const username = document.getElementById('username')
-        const urlusername = window.location.pathname.split('/')[1] 
+        const urlusername = decodeURIComponent(window.location.pathname.split('/')[1] )
         document.addEventListener('DOMContentLoaded',()=>{
             username.textContent = urlusername
         })

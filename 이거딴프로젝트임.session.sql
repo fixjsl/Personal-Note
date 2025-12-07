@@ -11,7 +11,7 @@ Create TABLE IF NOT EXISTS User(
 
     created_at timestamp default current_timestamp,
     isLogged Boolean not null default 0,
-    PostN int not null default 0
+    PostN int not null default 1
 )
 
 

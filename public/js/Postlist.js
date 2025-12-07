@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             titleLink.textContent = item.title;
             
 
-            titleLink.href = `/post/${item.postN}`; 
+            titleLink.href = `/post/post/${urlusername}/${item.postN}`; 
 
             titleCell.appendChild(titleLink);
             

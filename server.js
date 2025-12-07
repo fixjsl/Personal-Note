@@ -1,5 +1,5 @@
 import express from 'express'
-import mysql   from 'mysql2'
+import mysql   from 'mysql2/promise'
 import fs from 'fs/promises'
 import path from 'path'
 import session from 'express-session'
@@ -7,7 +7,7 @@ import bc, { compare } from 'bcrypt'
 import mul from 'multer'
 import { fileURLToPath } from 'url'
 import DatabaseM from './Database.js'
-import multer from 'multer'
+
 import { table } from 'console'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -23,19 +23,20 @@ const tableatri = ["uid","username","id","password","role"]
 //
 const salt = 10
 //DB연결
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
     host: 'localhost',
     user: 'fixjsl',
     password: 'fixjsl75767@',
-    database: 'polygonDefense'
+    database: 'polygonDefense',
+    waitForConnections : true,
+    connectionLimit : 10,
+    queueLimit : 0
 })
-connection.connect(err=>{
-    if(err){
-        console.log(err)
-        return
-    }
-    console.log('Connection complete')
-})
+connection.getConnection().then(() => {
+        console.log('Connection complete');
+
+        DatabaseM.SetDatabase(connection); 
+    })
 DatabaseM.SetDatabase(connection)
 //암호화 함수
 
@@ -81,7 +82,8 @@ app.post('/Login-data',async (req,res)=>{
     const password = req.body.password.trim()
     console.log(password)
     try{
-        const result = await DatabaseM.Selectid(tableatri,usertable,id)
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Selectid(conn,tableatri,usertable,id)
         console.log(result[0])
         if(result[0].length===0){
             return res.status(404).send("아이디가 없거나 비밀번호가 틀립니다")
@@ -97,7 +99,7 @@ app.post('/Login-data',async (req,res)=>{
         }
         const userdata = result[0][0]
         //데이터베이스 userLogin속성 바꾸기
-        DatabaseM.Update("isLogged",usertable,true,id)
+        DatabaseM.Update(conn,"isLogged",usertable,true,id)
         req.session.isLog = true
         req.session.user = {
             uid : userdata.uid,
@@ -120,7 +122,8 @@ app.post('/Login-data',async (req,res)=>{
 app.get('/Logout-requset', async (req,res)=>{
     const uid = req.session.user.uid
     req.session.destroy( async err =>{
-        await DatabaseM.Update(false,usertable,"isLogged",uid)
+        const conn = await DatabaseM.Database.getConnection();
+        await DatabaseM.Update(conn,false,usertable,"isLogged",uid)
         res.redirect('/Login.html')
     })
 })
@@ -130,7 +133,8 @@ app.get('/regist/Id_depuli', async (req,res)=>{
     const userid = req.query.id
     console.log(userid)
     try{
-        const result = await DatabaseM.Selectid("id",usertable,userid)
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Selectid(conn,"id",usertable,userid)
 
         const userdata = result[0]
         console.log(userdata)
@@ -154,7 +158,8 @@ app.post('/Register-data',async (req,res)=>{
     const password = req.body.password
     try{
         //
-        const result = await DatabaseM.Selectid("id",usertable,id)
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Selectid(conn,"id",usertable,id)
 
         const userdata = result[0]
 
@@ -163,7 +168,7 @@ app.post('/Register-data',async (req,res)=>{
         }
         else{
             const passwordh = await passwordhash(password)
-            await DatabaseM.Insert(usertable,[username,id,passwordh,defaultimg])
+            await DatabaseM.Insert(conn,usertable,[username,id,passwordh,defaultimg])
             const pathd = path.join(Note,username)
             await fs.mkdir(pathd,{recursive:true})
             console.log("회원가입 성공 성공")
@@ -183,8 +188,10 @@ app.post('/update-username',async (req,res)=>{
 
     const changeusername = req.body.username
     try {
-        await DatabaseM.Update('username',usertable,changeusername,uid)
-        return res.status(200).send("닉네임 변경 성공")
+        const conn = await DatabaseM.Database.getConnection();
+        await DatabaseM.Update(conn,'username',usertable,changeusername,uid)
+        req.session.user.username = changeusername
+        return res.redirect(`/${changeusername}/userinfo`)
     } catch (error) {
         console.log(err)
                 return res.status(500).send(err)
@@ -200,11 +207,13 @@ app.post('/update-password',async (req,res) =>{
     }
     
     try{
-        const result = await DatabaseM.Select(['uid','password'],usertable,uid)
+        
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Select(conn,['uid','password'],usertable,uid)
         const userpass = result[0][0].password
         if(await comparepass(curpassword,userpass)){
             const hashnew = await passwordhash(newpassword)
-            await DatabaseM.Update('password',usertable,hashnew,uid)
+            await DatabaseM.Update(conn,'password',usertable,hashnew,uid)
             return res.status(200).send("비밀번호 변경 성공")
         }
         else{
@@ -219,8 +228,8 @@ app.post('/update-password',async (req,res) =>{
 app.post('/delete-user',async (req,res)=>{
     try {
         const uid = req.session.user.uid
-        
-        await DatabaseM.Delete(uid,usertable)
+        const conn = await DatabaseM.Database.getConnection();
+        await DatabaseM.Delete(conn,uid,usertable)
         req.session.destroy( async err =>{
             return  res.redirect('/')
     })
@@ -239,19 +248,25 @@ app.post('/posts/:username/Write-data',async (req,res)=>{
     const text = req.body.text
   
     try{
-        const result = await DatabaseM.Select("PostN",usertable,uid)
-        const postN = result[0][0].PostNumber
+        const conn = await DatabaseM.Database.getConnection(); 
+        await conn.beginTransaction();
+        const result = await DatabaseM.Select(conn,"PostN",usertable,uid)
+        console.log(result[0][0].PostN)
+        const postN = result[0][0].PostN
         const pathJ = path.join(Note,req.session.user.username,`${postN}.json`)
         //회원의 개인 포 ㄹ더에  json형태로 저장 
         const json = {
-            postN: postN+1,
+            postN: postN,
             title : title,
             text : text,
             when : new Date()
         }
-        await DatabaseM.Update("PostNumber",usertable,postN+1,uid)
+        const Nextpost = postN +1
+        console.log(Nextpost)
+        await DatabaseM.Update(conn,"PostN",usertable,Nextpost,uid)
         const jsonS = JSON.stringify(json,null,2)
         await fs.writeFile(pathJ,jsonS,'utf-8')
+        await conn.commit();
         return res.redirect(`/post/${req.session.user.username}`)
     }
     catch(err){
@@ -328,11 +343,12 @@ app.get('/api/post/:username',async (req,res)=>{
 //이미지 불러오기
 app.get('/api/getimg',async (req,res)=>{
     try{
-        const result = await DatabaseM.Select("profile_img",usertable,req.session.user.uid)
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Select(conn,"profile_img",usertable,req.session.user.uid)
         if(result[0].length === 0){
             return res.status(404).send("존재하지 않는 유저입니다")
         }
-        const imgp = path.join(__dirname,"UserProfile",result[0][0].profile_img)
+        const imgp = path.join(__dirname,result[0][0].profile_img)
         res.sendFile(imgp)
     }catch(err){
         console.log(err)
@@ -345,7 +361,8 @@ app.post('/profile-img',Filup.single('img'),async (req,res)=>{
     const filename = req.file.fieldname
 
     try {
-        await DatabaseM.Update("profile_img",usertable,filename,uid)
+        const conn = await DatabaseM.Database.getConnection();
+        await DatabaseM.Update(conn,"profile_img",usertable,filename,uid)
         res.redirect(`/userinfo/${req.session.user.username}`)
     } catch (error) {
                 console.log(err)
@@ -384,7 +401,8 @@ app.get('/', (req,res) =>{
 })
 app.get('/RootPage.html',async (req,res)=>{
     try {
-        const result = await DatabaseM.Select('*',table)
+        const conn = await DatabaseM.Database.getConnection()
+        const result = await DatabaseM.Selectt(conn,["uid","username","PostN","isLogged"],usertable)
 
         const userdata = result[0]
 
